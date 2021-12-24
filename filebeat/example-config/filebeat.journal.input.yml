@@ -1,0 +1,83 @@
+- type: journald
+  id: everything
+  paths:
+    - /var/log/journal
+  include_matches:
+    - syslog.priority=1
+    - syslog.priority=2
+    - syslog.priority=3
+  processors:
+    - add_fields:
+        target: "host"
+        fields:
+          name: "homeassistant"
+    - dissect:
+        field: "journald.custom.image_name"
+        tokenizer: "%{name}:%{tag}"
+        target_prefix: "container.image"
+    - drop_event:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+INFO.*"
+    - drop_event:
+        when:
+          and:
+            - equals.container.image.name: "ghcr.io/home-assistant/aarch64-hassio-audio"
+            - regexp.message: "^[DI]: [[]"
+    - add_fields:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+INF.*"
+        target: log
+        fields:
+          level: "info"
+    - add_fields:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+WARN.*"
+        target: log
+        fields:
+          level: "warning"
+    - add_fields:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+ERR.*"
+        target: log
+        fields:
+          level: "error"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+WARN.*"
+        field: "message"
+        tokenizer: "%{ignore_this}	WARN	%{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+WARN.*"
+        field: "message"
+        tokenizer: "%{ignore_this} WARNING %{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[\t]+ERROR\t.*"
+        field: "message"
+        tokenizer: "%{ignore_this}	ERROR	%{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})? +ERROR .*"
+        field: "message"
+        tokenizer: "%{ignore_this} ERROR %{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"

@@ -1,0 +1,12 @@
+setup.ilm.check_exists: false
+
+filebeat.config.inputs:
+  enabled: true
+  path: /config/filebeat.*.input.yml
+  reload.enabled: true
+  reload.period: 10s
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'
+  username: '${ELASTICSEARCH_USERNAME:}'
+  password: '${ELASTICSEARCH_PASSWORD:}'

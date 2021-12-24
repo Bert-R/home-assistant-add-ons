@@ -1,0 +1,16 @@
+name: "Filebeat"
+description: "Elastic Filebeat"
+version: "1.0.0"
+slug: "filebeat"
+arch:
+  - aarch64
+journald: true
+startup: "application"
+map:
+  - config
+options:
+  elasticsearch_hosts: "elasticsearch:9200"
+schema:
+  elasticsearch_hosts: "str"
+  elasticsearch_username: "str?"
+  elasticsearch_password: "password?"
