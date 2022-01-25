@@ -17,13 +17,20 @@
         target_prefix: "container.image"
     - drop_event:
         when:
-          regexp:
-            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+INFO.*"
+          and:
+            - not.equals.container.name: "hassio_supervisor"
+            - regexp.message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ 	]+INFO.*"
     - drop_event:
         when:
           and:
             - equals.container.image.name: "ghcr.io/home-assistant/aarch64-hassio-audio"
             - regexp.message: "^[DI]: [[]"
+    - copy_fields:
+        fields:
+          - from: message
+            to: event.original
+        fail_on_error: false
+        ignore_missing: true
     - add_fields:
         when:
           regexp:
@@ -45,6 +52,68 @@
         target: log
         fields:
           level: "error"
+    - add_fields:
+        when:
+          equals.syslog.identifier: "systemd-coredump"
+        target: log
+        fields:
+          level: "error"
+    - copy_fields:
+        when:
+          equals.syslog.identifier: "systemd-coredump"
+        fields:
+          - from: journald.custom.coredump_comm
+            to: service.type
+        fail_on_error: false
+        ignore_missing: true
+    - add_fields:
+        when:
+          equals.container.name: "hassio_supervisor"
+        target: "service"
+        fields:
+          type: "Hassio Supervisor"
+    - add_fields:
+        when:
+          not.has_fields: [ "log.level" ]
+        target: "log"
+        fields:
+          level: "unknown"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[	]+INFO.*"
+        field: "message"
+        tokenizer: "%{ignore_this}	INFO	%{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ ]+INFO.*"
+        field: "message"
+        tokenizer: "%{ignore_this} INFO %{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ ]+INFO:.*"
+        field: "message"
+        tokenizer: "%{ignore_this} INFO: %{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
+    - dissect:
+        when:
+          regexp:
+            message: ".*([0-9]{2,4}[:-])?[0-9]{1,2}[:-][0-9]{2}[T ][0-9]{2}:[0-9]{2}:[0-9]{2}([.,][0-9]{3})?([+][0-9]{4})?[ ]+INFO.*"
+        field: "message"
+        tokenizer: "%{ignore_this} INFO %{message}"
+        target_prefix: ""
+        overwrite_keys: true
+        trim_chars: " \t"
     - dissect:
         when:
           regexp:
@@ -81,3 +150,53 @@
         target_prefix: ""
         overwrite_keys: true
         trim_chars: " \t"
+    - script:
+        when:
+          not.has_fields: [ "service.type" ]
+        lang: javascript
+        id: my_filter
+        source: >
+          function process(event) {
+            var containerName = event.Get("container.image.name")
+            containerName = containerName.match("[0-9a-z]+/aarch64-addon-filebeat") ? "xxxxxxxx/aarch64-addon-filebeat" : containerName;
+            var friendlyName = imageToNameMapping[containerName]
+            if (friendlyName == nameHA) {
+              var message = event.Get("message")
+              var match = message.match(".*\\[homeassistant\\.components\\.([a-zA-Z_\\-0-9]+).*")
+              if (match) {
+                friendlyName = "HA component " + match[1]
+              }
+              var match = message.match(".*\\[custom_components\\.([a-zA-Z_\\-0-9]+).*")
+              if (match) {
+                friendlyName = "HA custom component " + match[1]
+              }
+            }
+            event.Put("service.type", friendlyName || "Unknown")
+          }
+          var nameHA = "Home assistant";
+          var imageToNameMapping = {
+            "adamoutler/aarch64-hassosargonone": "Add-on ArgonOne",
+            "esphome/esphome-hassio-aarch64": "Add-on ESPHome",
+            "ghcr.io/hassio-addons/ssh/aarch64": "Add-on SSH",
+            "ghcr.io/home-assistant/aarch64-hassio-audio": "Hassio Audio",
+            "ghcr.io/home-assistant/aarch64-hassio-cli": "Hassio CLI",
+            "ghcr.io/home-assistant/aarch64-hassio-dns": "Hassio DNS",
+            "ghcr.io/home-assistant/aarch64-hassio-multicast": "Hassio Multicast",
+            "ghcr.io/home-assistant/aarch64-hassio-observer": "Hassio Observer",
+            "ghcr.io/home-assistant/raspberrypi4-64-homeassistant": nameHA,
+            "homeassistant/aarch64-addon-deconz": "Add-on deCONZ",
+            "homeassistant/aarch64-addon-mosquitto": "Add-on Mosquitto broker",
+            "homeassistant/aarch64-addon-samba": "Add-on Samba share",
+            "homeassistant/aarch64-addon-zwave_js": "Add-on Z-Wave JS",
+            "homeassistant/aarch64-hassio-supervisor": "Hassio Supervisor",
+            "sabeechen/hassio-google-drive-backup-aarch64": "Add-on Google Backup",
+            "xxxxxxxx/aarch64-addon-filebeat": "Add-on Filebeat",
+          }
+    - drop_event:
+        when:
+          and:
+            - equals.log.level: "info"
+            - equals.service.type: "Hassio Supervisor"
+            - or:
+              - regexp.message: ".*Auth request from 'core_mosquitto' for 'mqtt'.*"
+              - regexp.message: ".*Successful login for 'mqtt'.*"
