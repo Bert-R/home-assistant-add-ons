@@ -1,5 +1,9 @@
 <!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
 
+## 1.0.3
+
+- Set ``init`` to ``false``, to startup prevent error.
+
 ## 1.0.2
 
 - Upgrade to Filebeat 8.6.0

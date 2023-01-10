@@ -4,6 +4,7 @@ version: "1.0.2"
 slug: "filebeat"
 arch:
   - aarch64
+init: false
 journald: true
 startup: "application"
 map:
