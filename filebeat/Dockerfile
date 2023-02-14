@@ -4,12 +4,16 @@ FROM $BUILD_FROM
 
 MAINTAINER Bert Roos
 
+ARG BUILD_ARCH
+
 COPY run.sh /
 RUN chmod a+x /run.sh
 
-RUN FILEBEAT_ARCH=linux-arm64; \
-    FILEBEAT_VERSION=8.6.0; \
-    curl https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-${FILEBEAT_VERSION}-${FILEBEAT_ARCH}.tar.gz -o /filebeat.tar.gz && \
+RUN FILEBEAT_VERSION=8.6.1; \
+    FILEBEAT_ARCH="${BUILD_ARCH}"; \
+    if [ "${BUILD_ARCH}" = "aarch64" ]; then FILEBEAT_ARCH="arm64"; fi; \
+    if [ "${BUILD_ARCH}" = "amd64" ]; then FILEBEAT_ARCH="x86_64"; fi; \
+    curl https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-${FILEBEAT_VERSION}-linux-${FILEBEAT_ARCH}.tar.gz -o /filebeat.tar.gz && \
     tar xzvf filebeat.tar.gz && \
     rm filebeat.tar.gz && \
     mv filebeat-${FILEBEAT_VERSION}-${FILEBEAT_ARCH} filebeat && \

@@ -1,9 +1,10 @@
 name: "Filebeat"
 description: "Send Home Assistant journal logs to Elasticsearch through Filebeat"
-version: "1.0.3"
+version: "1.0.4"
 slug: "filebeat"
 arch:
   - aarch64
+  - amd64
 init: false
 journald: true
 startup: "application"
