@@ -16,8 +16,8 @@ RUN FILEBEAT_VERSION=8.6.1; \
     curl https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-${FILEBEAT_VERSION}-linux-${FILEBEAT_ARCH}.tar.gz -o filebeat.tar.gz && \
     tar xzvf filebeat.tar.gz && \
     rm filebeat.tar.gz && \
-    mv filebeat-${FILEBEAT_VERSION}-linux-${FILEBEAT_ARCH} filebeat && \
-    cd filebeat && \
+    mv filebeat-${FILEBEAT_VERSION}-linux-${FILEBEAT_ARCH} /filebeat && \
+    cd /filebeat && \
     cp filebeat /usr/bin
 
 WORKDIR /filebeat/
