@@ -5,6 +5,7 @@ FROM $BUILD_FROM
 MAINTAINER Bert Roos
 
 ARG BUILD_ARCH
+ARG BUILD_FROM
 
 COPY run.sh /
 RUN chmod a+x /run.sh
