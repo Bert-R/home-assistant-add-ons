@@ -5,8 +5,5 @@ export ELASTICSEARCH_USERNAME=$(bashio::config 'elasticsearch_username')
 export ELASTICSEARCH_PASSWORD=$(bashio::config 'elasticsearch_password')
 
 set -x
-echo "Source URL: "
-cat src_url
-which filebeat
-echo $PATH
+readelf -a /usr/bin/filebeat
 filebeat -e -c /config/filebeat.yml --path.data /data
