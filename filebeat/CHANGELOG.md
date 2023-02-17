@@ -1,5 +1,9 @@
 <!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
 
+## 1.0.5
+
+- Upgrade to Filebeat 8.6.2
+
 ## 1.0.4
 
 - Add support for AMD64 and upgrade to 8.6.1
