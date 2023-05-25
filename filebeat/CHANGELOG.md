@@ -1,5 +1,9 @@
 <!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
 
+## 1.0.6
+
+- Upgrade to Filebeat 8.8.0
+
 ## 1.0.5
 
 - Upgrade to Filebeat 8.6.2
