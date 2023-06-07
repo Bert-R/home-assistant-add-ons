@@ -1,5 +1,9 @@
 <!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
 
+## 1.0.8
+
+- Remove debug info
+
 ## 1.0.7
 
 - Add debug info
