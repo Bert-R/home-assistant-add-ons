@@ -1,5 +1,9 @@
 <!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
 
+## 1.0.7
+
+- Add debug info
+
 ## 1.0.6
 
 - Upgrade to Filebeat 8.8.0
